@@ -1,0 +1,1 @@
+User is Gaurav (Telegram ID: 8134356978). He's interested in setting up Hermes as a business orchestrator — cron jobs, automation workflows, sub-agent delegation, and connecting to business tools. He's technically minded and values reliability/backup (wants his Hermes config linked to a private Git repo). Communication style is casual and direct — short messages, no fluff.

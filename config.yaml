@@ -1,0 +1,9 @@
+model: openrouter/owl-alpha
+providers:
+  openrouter:
+    api_key: ${OPENROUTER_API_KEY}
+
+platforms:
+  telegram:
+    enabled: true
+    token: ${TELEGRAM_BOT_TOKEN}
