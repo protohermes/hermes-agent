@@ -1,0 +1,11 @@
+model: nvidia/nemotron-3-super-120b-a12b:free
+providers:
+  openrouter:
+    api_key: ${OPENROUTER_API_KEY}
+platforms:
+  telegram:
+    enabled: true
+    token: ${TELEGRAM_BOT_TOKEN}
+onboarding:
+  seen:
+    busy_input_prompt: true
