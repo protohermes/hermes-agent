@@ -33,9 +33,13 @@ People use Hermes for software development, research, system administration, dat
 
 ## Quick Start
 
+## Quick Start
+
 ```bash
 # Install
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+
+> **Note**: Due to PEP 668 restrictions, `pip` is not available in the system Python environment. Use `uv` for package management (e.g., `uv pip install <package>` or `uvx <tool>`) or install packages in a virtual environment.
 
 # Interactive chat (default)
 hermes
@@ -169,9 +173,21 @@ hermes sessions stats       Session store statistics
 
 ### Cron Jobs
 
-```
+```bash
 hermes cron list            List jobs (--all for disabled)
-hermes cron create SCHED    Create: '30m', 'every 2h', '0 9 * * *'
+hermes cron create SCHED    Create: '30m', 'every 2h', '0 9 * * *'\nhermes cron edit ID         Edit schedule, prompt, delivery\nhermes cron pause/resume ID Control job state\nhermes cron run ID          Trigger on next tick\nhermes cron remove ID       Delete a job\nhermes cron status          Scheduler status\n```
+
+> **Note on cron job creation:** When creating a cron job with a custom prompt, the schedule comes first, then the prompt as a separate argument. The correct syntax is:
+> ```bash
+> hermes cron create "0 9 * * *" "Your prompt here" --name "job-name"
+> ```
+> Do NOT use `--prompt` flag - the prompt is a positional argument after the schedule.
+
+> **Note on cron job creation:** When creating a cron job with a custom prompt, the schedule comes first, then the prompt as a separate argument. The correct syntax is:
+> ```bash
+> hermes cron create "0 9 * * *" "Your prompt here" --name "job-name"
+> ```
+> Do NOT use `--prompt` flag - the prompt is a positional argument after the schedule.
 hermes cron edit ID         Edit schedule, prompt, delivery
 hermes cron pause/resume ID Control job state
 hermes cron run ID          Trigger on next tick

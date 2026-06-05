@@ -22,22 +22,30 @@ adapter lets people email the agent and uses Hermes' built-in IMAP/SMTP
 adapter; this skill lets the agent operate a mailbox from terminal tools and
 requires the external `himalaya` CLI.
 
-## References
-
-- `references/configuration.md` (config file setup + IMAP/SMTP authentication)
-- `references/message-composition.md` (MML syntax for composing emails)
+## References\\\\n\\\\n- `references/configuration.md` (config file setup + IMAP/SMTP authentication)\\\\n- `references/message-composition.md` (MML syntax for composing emails)\\\\n- `references/outlook-hotmail.md` (Outlook/Hotmail/Microsoft 365 config template)\\\\n- `references/gmail.md` (Gmail/App Password configuration guide)\\\\n- `references/gmail-app-password.md` (Detailed Gmail App Password setup guide)\\\\n- `references/gmail-himalaya-setup.md` (Step-by-step Gmail + Himalaya setup from working session)\\\\n- `references/gmail-himalaya-setup.md` (Step-by-step Gmail + Himalaya setup from working session)\\\\n- `references/gmail-himalaya-setup.md` (Step-by-step Gmail + Himalaya setup from working session)
 
 ## Prerequisites
 
 1. Himalaya CLI installed (`himalaya --version` to verify)
 2. A configuration file at `~/.config/himalaya/config.toml`
 3. IMAP/SMTP credentials configured (password stored securely)
+4. **For Gmail**: 2-Factor Authentication enabled and App Password generated (see `references/gmail-app-password.md`)
 
 ### Installation
 
+> **Security note:** The following installation method downloads and executes a script directly. 
+> For maximum security, download the script first, inspect its contents, then run it.
+> Alternatively, use the Homebrew or cargo methods below which involve less risk.
+
 ```bash
 # Pre-built binary (Linux/macOS — recommended)
-curl -sSL https://raw.githubusercontent.com/pimalaya/himalaya/master/install.sh | PREFIX=~/.local sh
+# Option 1: Download and inspect first (most secure)
+curl -sSL https://raw.githubusercontent.com/pimalaya/himalaya/master/install.sh -o himalaya_install.sh
+# Review himalaya_install.sh contents, then:
+PREFIX=~/.local sh himalaya_install.sh
+
+# Option 2: Direct execution (less secure, not recommended for production)
+# curl -sSL https://raw.githubusercontent.com/pimalaya/himalaya/master/install.sh | PREFIX=~/.local sh
 
 # macOS via Homebrew
 brew install himalaya
@@ -46,47 +54,47 @@ brew install himalaya
 cargo install himalaya --locked
 ```
 
-## Configuration Setup
+## Gmail-Specific Configuration
 
-Run the interactive wizard to set up an account:
-
-```bash
-himalaya account configure
-```
-
-Or create `~/.config/himalaya/config.toml` manually:
+For Gmail/Google Workspace accounts, use these specific settings:
 
 ```toml
 [accounts.personal]
-email = "you@example.com"
+email = "yourname@gmail.com"
 display-name = "Your Name"
 default = true
 
-backend.type = "imap"
-backend.host = "imap.example.com"
-backend.port = 993
-backend.encryption.type = "tls"
-backend.login = "you@example.com"
-backend.auth.type = "password"
-backend.auth.cmd = "pass show email/imap"  # or use keyring
+[accounts.personal.backend]
+type = "imap"
+host = "imap.gmail.com"
+port = 993
+encryption.type = "tls"
+login = "yourname@gmail.com"
+auth.type = "password"
+auth.cmd = "echo YOUR_APP_PASSWORD_HERE"  # Replace with actual app password
 
-message.send.backend.type = "smtp"
-message.send.backend.host = "smtp.example.com"
-message.send.backend.port = 587
-message.send.backend.encryption.type = "start-tls"
-message.send.backend.login = "you@example.com"
-message.send.backend.auth.type = "password"
-message.send.backend.auth.cmd = "pass show email/smtp"
+[accounts.personal.message.send]
+  backend.type = "smtp"
+  backend.host = "smtp.gmail.com"
+  backend.port = 587
+  backend.encryption.type = "start-tls"
+  backend.login = "yourname@gmail.com"
+  backend.auth.type = "password"
+  backend.auth.cmd = "echo YOUR_APP_PASSWORD_HERE"  # Replace with actual app password
 
-# Folder aliases (himalaya v1.2.0+ syntax). Required whenever the
-# server's folder names don't match himalaya's canonical names
-# (inbox/sent/drafts/trash). Gmail is the common case — see
-# `references/configuration.md` for the `[Gmail]/Sent Mail` mapping.
-folder.aliases.inbox = "INBOX"
-folder.aliases.sent = "Sent"
-folder.aliases.drafts = "Drafts"
-folder.aliases.trash = "Trash"
+[accounts.personal.folder.aliases]
+inbox = "INBOX"
+sent = "[Gmail]/Sent Mail"
+drafts = "[Gmail]/Drafts"
+trash = "[Gmail]/Trash"
 ```
+
+> **Critical Notes for Gmail:**
+> - **App Password Required**: Must use an App Password (not regular password) with 2-Factor Authentication enabled
+> - **Folder Aliases**: Gmail requires the `[Gmail]/` prefix for special folders (Sent Mail, Drafts, Trash)
+> - **IMAP Port**: 993 with TLS encryption
+> - **SMTP Port**: 587 with STARTTLS encryption
+> - **Security**: Never commit your App Password to version control - use environment variables or secure secret management in production
 
 > **Heads up on the alias syntax.** Pre-v1.2.0 docs used a
 > `[accounts.NAME.folder.alias]` sub-section (singular `alias`).
@@ -191,7 +199,7 @@ himalaya template forward 42 | sed 's/^To:.*/To: newrecipient@example.com/' | hi
 
 ### Write a New Email
 
-**Non-interactive (use this from Hermes)** — pipe the message via stdin:
+**Non-interactive (use this from Hermes)** — pipe the full email via stdin to `template send`:
 
 ```bash
 cat << 'EOF' | himalaya template send
@@ -203,13 +211,30 @@ Hello from Himalaya!
 EOF
 ```
 
-Or with headers flag:
+**For multiple recipients**, separate with commas in the To: header:
 
 ```bash
-himalaya message write -H "To:recipient@example.com" -H "Subject:Test" "Message body here"
+cat << 'EOF' | himalaya template send
+From: you@example.com
+To: recipient1@example.com, recipient2@example.com
+Subject: Test Message
+
+Hello from Himalaya!
+EOF
 ```
 
-Note: `himalaya message write` without piped input opens `$EDITOR`. This works with `pty=true` + background mode, but piping is simpler and more reliable.
+**Do NOT use** `himalaya message write` for non-interactive sending as it opens `$EDITOR` and requires PTY mode. The `template send` approach with stdin piping is more reliable for automation.
+
+> **Pro tip from production use**: When automating email sending (like in cron jobs), always use the `template send` approach with heredoc or file redirection. This avoids editor dependencies and works reliably in non-interactive environments. For example:
+> ```bash
+> himalaya template send < /path/to/email.txt
+> ```
+> or
+> ```bash
+> cat /path/to/email.txt | himalaya template send
+> ```
+
+Note: `himalaya message write` without piped input opens `$EDITOR`. This works with `pty=true` + background mode, but piping to `template send` is simpler and more reliable for automated workflows.
 
 ### Move/Copy Emails
 

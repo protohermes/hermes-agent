@@ -43,15 +43,23 @@ git config --global credential.helper 2>/dev/null || echo "no git credential hel
 
 This works on any machine with `git` installed. No root access needed.
 
+### ⚠️ CRITICAL: Classic PAT vs Fine-Grained PAT
+
+**Only classic PATs work with `git push` over HTTPS.** Fine-grained PATs (the newer GitHub token type) are **NOT compatible** with standard git HTTPS authentication — they require `gh` CLI or Git Credential Manager. If you have a fine-grained PAT, either:
+- Generate a **classic PAT** instead (recommended for headless/server use), OR
+- Install `gh` CLI and use Method 2
+
+**How to tell:** Classic PATs look like `ghp_xxxxxxxxxxxx`. Fine-grained PATs look like `github_pat_11XXXXXXXXXX_xxxxxxxxxxxx`.
+
 ### Option A: HTTPS with Personal Access Token (Recommended)
 
 This is the most portable method — works everywhere, no SSH config needed.
 
-**Step 1: Create a personal access token**
+**Step 1: Create a personal access token (classic)**
 
 Tell the user to go to: **https://github.com/settings/tokens**
 
-- Click "Generate new token (classic)"
+- Click **"Generate new token (classic)"** — NOT the fine-grained option
 - Give it a name like "hermes-agent"
 - Select scopes:
   - `repo` (full repository access — read, write, push, PRs)
@@ -245,3 +253,32 @@ fi
 | Credentials not persisting | Check `git config --global credential.helper` — must be `store` or `cache` |
 | Multiple GitHub accounts | Use SSH with different keys per host alias in `~/.ssh/config`, or per-repo credential URLs |
 | `gh: command not found` + no sudo | Use git-only Method 1 above — no installation needed |
+| `remote: Invalid username or token` / `Bad credentials` | **Validate the token first** — see "Token Validation" section below. If token is valid but push still fails, you likely have a **fine-grained PAT** which is incompatible with git HTTPS. Generate a classic PAT or use `gh` CLI. |
+| Fine-grained PAT doesn't work with `git push` | Classic PATs work with HTTPS git. Fine-grained PATs DO NOT. Generate a classic PAT at https://github.com/settings/tokens (click "Generate new token (classic)", NOT the fine-grained option).
+| Pushing to wrong GitHub account | Double-check your remote URL - it should contain the intended username/account. Use `git remote -v` to verify. The username in the URL determines which account you're pushing as, not your local git config user.name/user.email. See references/remote-url-check.md for details. |
+
+
+## Token Validation (Do This First!)
+
+Before spending time on git credential configuration, **always verify the token works**:
+
+```bash
+# Quick token test — returns 200 if valid, 401 if expired/revoked
+curl -s -o /dev/null -w "%{http_code}" \
+  -H "Authorization: token <TOKEN>" \
+  https://api.github.com/user
+```
+
+Or for full details:
+
+```bash
+curl -s -H "Authorization: token <TOKEN>" https://api.github.com/user
+```
+
+**If you get `{"message": "Bad credentials"}`**: The PAT is expired, revoked, or was copied incorrectly. Generate a new one at https://github.com/settings/tokens — do NOT spend time debugging git credential helpers when the token itself is the problem.
+
+**Common token issues:**
+- PATs expire (30/60/90 day lifetime depending on settings)
+- **Fine-grained PATs are incompatible with `git push` over HTTPS** — they require `gh` CLI. Use classic PATs for headless/server git operations.
+- Classic tokens need `repo` scope at minimum
+- Copy-paste errors — PATs are long and easy to truncate

@@ -60,6 +60,8 @@ Calendar/Drive/Sheets/Docs?"**
   instead — it works with a Gmail App Password (Settings → Security → App
   Passwords) and takes 2 minutes to set up. No Google Cloud project needed.
   Load the himalaya skill and follow its setup instructions.
+  
+  **Important note from user experience**: When setting up Gmail access, Himalaya with an App Password is often simpler and more reliable than the full Google Workspace OAuth flow for email-only use cases. The Google Workspace skill requires creating a Google Cloud project and managing OAuth credentials, which is overkill if you only need Gmail access.
 
 - **Email + Calendar** → Continue with this skill, but use
   `--services email,calendar` during auth so the consent screen only asks for
