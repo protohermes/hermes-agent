@@ -1,0 +1,12 @@
+# Sanitized Hermes config (API keys removed)
+# Original location: /opt/data/.hermes/config.yaml
+
+model: openrouter/owl-alpha
+providers:
+  openrouter:
+    api_key: <REDACTED>
+
+platforms:
+  telegram:
+    enabled: true
+    token: <REDACTED>

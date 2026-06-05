@@ -1,0 +1,63 @@
+# Secrets & credentials — NEVER commit these
+.env
+.git-credentials
+auth.json
+auth.lock
+*.token
+*.key
+*.pem
+
+# Session data & databases
+state.db
+state.db-wal
+state.db-shm
+kanban.db
+kanban.db.init.lock
+sessions/
+
+# Runtime / temp
+gateway.lock
+gateway.pid
+gateway_state.json
+*.lock
+processes.json
+
+# Caches
+image_cache/
+audio_cache/
+cache/
+logs/
+skills_prompt_snapshot.json
+
+# Update check
+.update_check
+
+# Sandboxes
+sandboxes/
+
+# Models cache
+models_dev_cache.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Skill metadata (not needed in backup)
+skills/.bundled_manifest
+skills/.curator_state
+skills/.usage.json
+skills/.usage.json.lock
